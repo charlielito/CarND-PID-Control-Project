@@ -20,6 +20,11 @@ double PID::control(double cte){
   d_error = cte - current_error;
   current_error = cte;
   i_error += cte;
+ 
+  // integral error only if has not exploded
+  //if abs(self.Ki * self.integral) < 100:
+  //    self.integral += self.error
+ 
   double value = -Kp * cte - Kd * d_error - Ki * i_error;
 
   return value;
