@@ -37,6 +37,10 @@ int main() {
 
   // Manualy tuned
   pid.Init(.09,0.003,1.3);
+  
+  PID speed_pid;
+  speed_pid.Init(0.1, 0.002, 0.0);
+  double speed_setpoint = 30.0;
 
   h.onMessage([&pid](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, 
                      uWS::OpCode opCode) {
@@ -63,13 +67,16 @@ int main() {
           steer_value = steer_value >= 1? 1: steer_value;
           steer_value = steer_value <= -1? -1: steer_value;
           
+          // speed control
+          double throttle = speed_pid.control(speed_setpoint-speed);
+          
           // DEBUG
           std::cout << "CTE: " << cte << " Steering Value: " << steer_value 
                     << std::endl;
 
           json msgJson;
           msgJson["steering_angle"] = steer_value;
-          msgJson["throttle"] = 0.3;
+          msgJson["throttle"] = throttle;
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
           std::cout << msg << std::endl;
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
