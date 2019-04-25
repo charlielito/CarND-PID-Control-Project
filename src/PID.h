@@ -19,23 +19,19 @@ class PID {
    */
   void Init(double Kp_, double Ki_, double Kd_);
 
-  /**
-   * Update the PID error variables given cross track error.
-   * @param cte The current cross track error
-   */
-  void UpdateError(double cte);
+
 
   /**
-   * Calculate the total PID error.
-   * @output The total PID error
+   * Calculate the total PID control command
+   * @output The total PID control command
    */
-  double TotalError();
+  double control(double cte);
 
  private:
   /**
    * PID Errors
    */
-  double p_error;
+  double current_error;
   double i_error;
   double d_error;
 
