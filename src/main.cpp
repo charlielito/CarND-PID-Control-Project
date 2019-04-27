@@ -9,6 +9,8 @@
 using nlohmann::json;
 using std::string;
 
+double speed_setpoint;
+
 // For converting back and forth between radians and degrees.
 constexpr double pi() { return M_PI; }
 double deg2rad(double x) { return x * pi() / 180; }
@@ -35,14 +37,15 @@ int main() {
 
   PID pid;
 
+
   // Manualy tuned
-  pid.Init(.09,0.003,1.3);
+  pid.Init(0.11,0.1,0.9);
   
   PID speed_pid;
-  speed_pid.Init(0.1, 0.002, 0.0);
-  double speed_setpoint = 30.0;
+  speed_pid.Init(0.5, 0.001, 0.02);
+  speed_setpoint = 45.0; // max good performance is 50
 
-  h.onMessage([&pid](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, 
+  h.onMessage([&pid, &speed_pid](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, 
                      uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
@@ -59,7 +62,7 @@ int main() {
           // j[1] is the data JSON object
           double cte = std::stod(j[1]["cte"].get<string>());
           double speed = std::stod(j[1]["speed"].get<string>());
-          double angle = std::stod(j[1]["steering_angle"].get<string>());
+          // double angle = std::stod(j[1]["steering_angle"].get<string>());
 
           double steer_value= pid.control(cte) ;
 
@@ -68,7 +71,10 @@ int main() {
           steer_value = steer_value <= -1? -1: steer_value;
           
           // speed control
-          double throttle = speed_pid.control(speed_setpoint-speed);
+          double throttle = speed_pid.control(speed-speed_setpoint);
+          //the throttle value is  [-1, 1].
+          throttle = throttle >= 1? 1: throttle;
+          throttle = throttle <= -1? -1: throttle;
           
           // DEBUG
           std::cout << "CTE: " << cte << " Steering Value: " << steer_value 
